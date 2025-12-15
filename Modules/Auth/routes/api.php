@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Auth\Http\Controllers\AuthController;
 
-Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
-    Route::apiResource('auths', AuthController::class)->names('auth');
+// api/v1/auth/check-user
+Route::middleware([])->prefix('v1/auth')->group(function () {
+    Route::post('check-user', [AuthController::class, 'checkUser'])
+    ->name('check-user')->middleware('throttle:check-user');
 });

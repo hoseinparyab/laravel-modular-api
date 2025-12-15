@@ -2,58 +2,27 @@
 
 namespace Modules\Auth\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use Modules\Auth\Http\Requests\CheckUserRequest;
 use Illuminate\Http\Request;
+use Modules\User\Models\User;
+use App\Http\Controllers\Controller;
 
 class AuthController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function checkUser(CheckUserRequest $request)
     {
-        //
+        $contact = $request->validated()['contact'];
 
-        return response()->json([]);
-    }
+        $exists = User::where('email', $contact)
+            ->orWhere('phone_number', $contact)
+            ->exists();
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-
-        return response()->json([]);
-    }
-
-    /**
-     * Show the specified resource.
-     */
-    public function show($id)
-    {
-        //
-
-        return response()->json([]);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id)
-    {
-        //
-
-        return response()->json([]);
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
-    {
-        //
-
-        return response()->json([]);
+        return response()->json([
+            'exists' => (bool) $exists,
+            'message' => $exists ? __('auth::messages.user_exists') : __('auth::messages.user_not_found'),
+        ], $exists ? 200 : 404);
     }
 }

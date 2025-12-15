@@ -1,5 +1,5 @@
 <?php
-namespace App\Models;
+namespace Modules\User\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,7 +19,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
-        'phone',
+        'phone_number',
         'password',
     ];
 
@@ -45,5 +45,18 @@ class User extends Authenticatable
             'phone_verified_at' => 'datetime',
             'password'          => 'hashed',
         ];
+    }
+
+    /**
+     * Allow accessing `phone` attribute mapped to `phone_number` column.
+     */
+    public function getPhoneAttribute(): ?string
+    {
+        return $this->attributes['phone_number'] ?? null;
+    }
+
+    public function setPhoneAttribute($value): void
+    {
+        $this->attributes['phone_number'] = $value;
     }
 }
