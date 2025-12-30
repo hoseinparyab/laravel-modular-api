@@ -11,8 +11,21 @@ class VerificationCodeService
 
     public function getCachekey( string $contact, VerificationActionType $action, ContactType $contactType): string
     {
-        return "verification:{$action->value}:{$contactType->value}:{$contact}";
+        $contact = hash('sha256', "{$action->value}:{$contactType->value}:{$contact}");
+        return "verification:{$contact}";
 
+    }
+    public function getRetryTime(string $contact, VerificationActionType $action, ContactType $contactType): ?int
+    {
+        $cacheKey = $this->getCachekey($contact, $action, $contactType);
+        $data = Cache::get($cacheKey);
+        if ($data && isset($data['expires_at'])) {
+            $expiresAt = $data['expires_at'];
+            if ($expiresAt->isFuture()) {
+                return now()->diffInSeconds($expiresAt);
+            }
+        }
+        return null;
     }
     public function generateCode(string $contact, VerificationActionType $action, ContactType $contactType, ?int $expiresminutes = null)
     {
@@ -29,5 +42,6 @@ class VerificationCodeService
         ]);
       return $code;
     }
+
     public function handle() {}
 }

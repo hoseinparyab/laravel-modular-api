@@ -4,9 +4,11 @@ namespace Modules\Auth\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Enum;
 use Modules\Auth\Enums\ContactType;
+use Illuminate\Validation\Rules\Enum;
+use Illuminate\Validation\Validator;
 use Modules\Auth\Enums\VerificationActionType;
+use Modules\Auth\Services\VerificationCodeService;
 
 class SendVerificationRequest extends FormRequest
 {
@@ -35,6 +37,27 @@ class SendVerificationRequest extends FormRequest
                 'string',
                 ...$this->getContactValidationRule(),
             ],
+        ];
+    }
+
+    public function after(): array
+    {
+        return [
+            function (Validator $validator): void {
+                // Additional custom validation logic can be added here if needed
+                if ($validator->errors()->isNotEmpty()) {
+                    return;
+                }
+                $contact = $this->input('contact');
+                $action = VerificationActionType::tryFrom($this->input('action'));
+                if (!$action) {
+                    return;
+                }
+                $retryTime = (new VerificationCodeService)->getRetryTime($contact, $action, $this->contactType);
+                if ($retryTime) {
+                    $validator->errors()->add('contact', __('auth::messages.verification_code_retry_after', ['seconds' => abs($retryTime)]));
+                }
+            }
         ];
     }
 

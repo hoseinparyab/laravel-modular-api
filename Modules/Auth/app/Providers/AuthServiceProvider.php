@@ -36,6 +36,12 @@ class AuthServiceProvider extends ServiceProvider
                 : Limit::perMinute(10, decayMinutes: 5)->by($request->ip());
         });
 
+        RateLimiter::for('verification-code', function (Request $request): Limit {
+            return app()->isLocal()
+                ? Limit::none()
+                : Limit::perMinute(10, decayMinutes: 20)->by($request->ip());
+        });
+
     }
 
     /**
