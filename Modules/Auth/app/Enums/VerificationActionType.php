@@ -2,10 +2,11 @@
 
 namespace Modules\Auth\Enums;
 
-enum VerificationAction: string
+enum VerificationActionType: string
 {
     case REGISTER = 'register';
     case LOGIN = 'login';
+
     public function isContactNeedToBeUnique(): bool
     {
         return $this === self::REGISTER;

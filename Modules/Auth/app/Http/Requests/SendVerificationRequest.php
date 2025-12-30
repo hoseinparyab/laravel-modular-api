@@ -6,10 +6,17 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 use Modules\Auth\Enums\ContactType;
-use Modules\Auth\Enums\VerificationAction;
+use Modules\Auth\Enums\VerificationActionType;
 
 class SendVerificationRequest extends FormRequest
 {
+
+    public ContactType $contactType;
+
+    public function prepareForValidation(): void
+    {
+        $this->contactType = ContactType::detectContactTypes($this->input('contact')?? '');
+    }
     /**
      * Get the validation rules that apply to the request.
      */
@@ -20,7 +27,7 @@ class SendVerificationRequest extends FormRequest
                 'bail',
                 'required',
                 'string',
-                new Enum(VerificationAction::class),
+                new Enum(VerificationActionType::class),
             ],
             'contact' => [
                 'bail',
@@ -41,13 +48,13 @@ class SendVerificationRequest extends FormRequest
         }
 
         $contactType = ContactType::detectContactTypes($this->input('contact', ''));
-        $verificationAction = VerificationAction::tryFrom($this->input('action'));
+        $verificationAction = VerificationActionType::tryFrom($this->input('action'));
 
         if (!$verificationAction) {
             return [];
         }
 
-        if ($contactType === ContactType::EMAIL) {
+        if ($this->contactType === ContactType::EMAIL) {
             return [
                 'email:rfc,dns',
                 Rule::when($verificationAction->isContactNeedToBeUnique(), 'unique:users,email'),
@@ -57,8 +64,8 @@ class SendVerificationRequest extends FormRequest
 
         return [
             'phone:mobile',
-            Rule::when($verificationAction->isContactNeedToBeUnique(), 'unique:users,phone'),
-            Rule::when($verificationAction->isContactNeedToExist(), 'exists:users,phone'),
+            Rule::when($verificationAction->isContactNeedToBeUnique(), 'unique:users,phone_number'),
+            Rule::when($verificationAction->isContactNeedToExist(), 'exists:users,phone_number'),
         ];
     }
 

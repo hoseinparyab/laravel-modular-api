@@ -10,5 +10,6 @@ Route::middleware([])->prefix('v1/auth')->group(function () {
     ->name('check-user')->middleware('throttle:check-user');
 
 
-    Route::post('code-verification/send-code', [VerificationController::class, 'SendCode']);
+    Route::post('code-verification/send-code', [VerificationController::class, 'sendCode']);
+
 });
