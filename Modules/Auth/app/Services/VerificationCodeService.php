@@ -3,8 +3,9 @@
 namespace Modules\Auth\Services;
 
 use Modules\Auth\Enums\ContactType;
-use Modules\Auth\Enums\VerificationActionType;
 use Illuminate\Support\Facades\Cache;
+use Modules\Auth\Enums\VerificationActionType;
+use Modules\Auth\Http\Requests\SendVerificationRequest;
 
 class VerificationCodeService
 {
@@ -27,6 +28,11 @@ class VerificationCodeService
         }
         return null;
     }
+    public function forgetCode(string $contact, VerificationActionType $action, ContactType $contactType): void
+    {
+        $cacheKey = $this->getCachekey($contact, $action, $contactType);
+        Cache::forget($cacheKey);
+    }
     public function generateCode(string $contact, VerificationActionType $action, ContactType $contactType, ?int $expiresminutes = null)
     {
         if($expiresminutes === null){
@@ -43,5 +49,34 @@ class VerificationCodeService
       return $code;
     }
 
+    public function sendCodeAsSMS( SendVerificationRequest $request, string $contact, int $code): array|bool
+    {
+        try {
+            $text = $request->input('text', "کد تایید شما به وبسایت ناجینو خوش امدید: {$code}");
+            $from = $request->input('from');
+            $isFlash = $request->input('isflash', false) ? true : false;
+
+            $result = (new MelipayamakService())->send($contact, $text, $from, $isFlash);
+
+            if (isset($result['success']) && !$result['success']) {
+                $this->forgetCode(
+                    contact: $contact,
+                    action: $request->action,
+                    contactType: $request->contactType,
+                );
+            }
+
+            return $result;
+
+
+        } catch (\Throwable $th) {
+            $this->forgetCode(
+                contact: $contact,
+                action: $request->action,
+                contactType: $request->contactType,
+            );
+            return false;
+        }
+    }
     public function handle() {}
 }

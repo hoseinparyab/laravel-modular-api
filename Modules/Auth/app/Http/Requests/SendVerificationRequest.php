@@ -14,10 +14,12 @@ class SendVerificationRequest extends FormRequest
 {
 
     public ContactType $contactType;
+    public VerificationActionType $action;
 
     public function prepareForValidation(): void
     {
-        $this->contactType = ContactType::detectContactTypes($this->input('contact')?? '');
+        $this->contactType = ContactType::detectContactTypes($this->input('contact') ?? '');
+        $this->action = VerificationActionType::tryFrom($this->input('action') ?? '');
     }
     /**
      * Get the validation rules that apply to the request.
@@ -49,7 +51,7 @@ class SendVerificationRequest extends FormRequest
                     return;
                 }
                 $contact = $this->input('contact');
-                $action = VerificationActionType::tryFrom($this->input('action'));
+                $action = $this->action;
                 if (!$action) {
                     return;
                 }
@@ -63,6 +65,7 @@ class SendVerificationRequest extends FormRequest
 
     private function getContactValidationRule(): array
     {
+        $verificationAction = $this->action;
         $contact = $this->input('contact');
         $action = $this->input('action');
 

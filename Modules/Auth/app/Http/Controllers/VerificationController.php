@@ -21,8 +21,25 @@ class VerificationController extends Controller {
         // Generate a random verification code
         $code = $this->verificationCodeService->generateCode(
           contact: $request->input('contact'),
-          action: VerificationActionType::from($request->input('action')),
+          action: $request->action,
           contactType: $request->contactType,
         );
-        return response()->json(['code' => $code], 200);    }
+
+        if ($request->contactType === ContactType::EMAIL)
+        {
+            // Send the code via email
+        }
+
+        if ($request->contactType === ContactType::PHONE)
+        {
+            // Send the code via SMS
+            $this->verificationCodeService->sendCodeAsSMS(
+                request: $request,
+                contact: $request->input('contact'),
+                code: $code,
+            );
+        }
+
+        return response()->json(['code' => $code], 200);
+    }
 }
