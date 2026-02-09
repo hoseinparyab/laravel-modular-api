@@ -28,12 +28,17 @@ class VerificationController extends Controller {
         if ($request->contactType === ContactType::EMAIL)
         {
             // Send the code via email
+            $responseStatus = $this->verificationCodeService->sendCodeAsEmail(
+                request: $request,
+                contact: $request->input('contact'),
+                code: $code,
+            );
         }
 
         if ($request->contactType === ContactType::PHONE)
         {
             // Send the code via SMS
-            $this->verificationCodeService->sendCodeAsSMS(
+            $responseStatus = $this->verificationCodeService->sendCodeAsSMS(
                 request: $request,
                 contact: $request->input('contact'),
                 code: $code,

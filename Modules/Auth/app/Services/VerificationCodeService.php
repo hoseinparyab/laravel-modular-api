@@ -3,7 +3,11 @@
 namespace Modules\Auth\Services;
 
 use Modules\Auth\Enums\ContactType;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cache;
+use Modules\Auth\Mail\VerificationCodeMail;
+use Modules\Auth\Services\MelipayamakService;
+use Modules\Auth\Emails\VerificationCodeEmail;
 use Modules\Auth\Enums\VerificationActionType;
 use Modules\Auth\Http\Requests\SendVerificationRequest;
 
@@ -69,6 +73,21 @@ class VerificationCodeService
             return $result;
 
 
+        } catch (\Throwable $th) {
+            $this->forgetCode(
+                contact: $contact,
+                action: $request->action,
+                contactType: $request->contactType,
+            );
+            return false;
+        }
+    }
+    public function sendCodeAsEmail(SendVerificationRequest $request, string $contact, int $code): array|bool
+    {
+        try {
+
+                Mail::to($contact)->send(new VerificationCodeEmail($code));
+            return true;
         } catch (\Throwable $th) {
             $this->forgetCode(
                 contact: $contact,
