@@ -7,6 +7,7 @@ use Modules\Auth\Enums\ContactType;
 use Modules\Auth\Enums\VerificationActionType;
 use Modules\Auth\Services\VerificationCodeService;
 use Modules\Auth\Http\Requests\SendVerificationRequest;
+use Modules\Auth\Http\Requests\VerifyverificationRequest;
 
 class VerificationController extends Controller {
 
@@ -60,5 +61,9 @@ class VerificationController extends Controller {
         }
 
         return response()->json(['code' => $code, 'message' => 'Verification code sent successfully'], 200);
+    }
+    public function verifyCode(VerifyverificationRequest $request)
+    {
+
     }
 }

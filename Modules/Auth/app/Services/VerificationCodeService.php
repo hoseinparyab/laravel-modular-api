@@ -56,11 +56,20 @@ class VerificationCodeService
     public function sendCodeAsSMS( SendVerificationRequest $request, string $contact, int $code): array|bool
     {
         try {
-            $text = $request->input('text', "کد تایید شما به وبسایت ناجینو خوش امدید: {$code}");
-            $from = $request->input('from');
-            $isFlash = $request->input('isflash', false) ? true : false;
+            $service = new MelipayamakService();
+            $patternId = config('auth.service.melipayamak.pattern_id', env('MELIPAYAMAK_PATTERN_ID'));
 
-            $result = (new MelipayamakService())->send($contact, $text, $from, $isFlash);
+            if ($patternId) {
+                // If pattern is configured, use the high-speed shared service
+                $result = $service->sendByPattern($contact, $patternId, [(string) $code]);
+            } else {
+                // Otherwise fall back to simple SMS (subject to operator filtering)
+                // Note: Simplified text to avoid "Invalid Content" (Code 11) filters
+                $text = $request->input('text', "{$code}");
+                $from = $request->input('from');
+                $isFlash = $request->input('isflash', true) ? true : false;
+                $result = $service->send($contact, $text, $from, $isFlash);
+            }
 
             if (isset($result['success']) && !$result['success']) {
                 $this->forgetCode(
@@ -96,6 +105,16 @@ class VerificationCodeService
             );
             return false;
         }
+    }
+    public function verifyCode(string $contact, VerificationActionType $action, ContactType $contactType, int $code): bool
+    {
+        $cacheKey = $this->getCachekey($contact, $action, $contactType);
+        $cacheValue = Cache::get($cacheKey);
+        if($cacheValue &&(string) $cacheValue['code']===$code ){
+            $this-> forgetCode($contact, $action, $contactType);
+            return true;
+        }
+        return false;
     }
     public function handle() {}
 }

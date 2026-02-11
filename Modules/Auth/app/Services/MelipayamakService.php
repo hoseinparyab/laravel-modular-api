@@ -42,7 +42,7 @@ class MelipayamakService
         ];
 
         $post_data = http_build_query($data);
-        $handle = curl_init('http://api.payamak-panel.com/post/Send.asmx/SendSimpleSMS2');
+        $handle = curl_init('https://api.payamak-panel.com/post/Send.asmx/SendSimpleSMS2');
         curl_setopt($handle, CURLOPT_HTTPHEADER, [
             'content-type: application/x-www-form-urlencoded'
         ]);
@@ -68,9 +68,12 @@ class MelipayamakService
 
         $cleanResponse = trim(strip_tags((string) $response));
 
+        // Melipayamak sometimes returns JSON-like or structured strings in simple mode
+        // but usually just a numeric value.
+
         // Check for specific error codes
         if (array_key_exists($cleanResponse, self::ERROR_MESSAGES)) {
-            Log::warning("Melipayamak Error Response: " . $cleanResponse . " - " . self::ERROR_MESSAGES[$cleanResponse]);
+            Log::warning("Melipayamak Error Response: " . $cleanResponse . " - " . self::ERROR_MESSAGES[$cleanResponse] . " | To: $to | Text: $text");
             return [
                 'success' => false,
                 'message' => self::ERROR_MESSAGES[$cleanResponse],
@@ -78,7 +81,7 @@ class MelipayamakService
             ];
         }
 
-        // If it's a numeric value that isn't in our error list, assume it's a success RecID
+        // If it's a numeric value > 100, it's a RecID (Success)
         if (is_numeric($cleanResponse) && (float)$cleanResponse > 100) {
              return [
                 'success' => true,
@@ -87,12 +90,51 @@ class MelipayamakService
             ];
         }
 
-        Log::error("Melipayamak Unexpected Response: " . $cleanResponse);
-        // Fallback for unexpected responses
+        Log::error("Melipayamak Unexpected Response: " . $cleanResponse . " | To: $to");
         return [
             'success' => false,
             'message' => 'پاسخ نامشخص از سامانه پیامک: ' . $cleanResponse,
             'response' => $cleanResponse
+        ];
+    }
+
+    /**
+     * Send OTP via Shared Service (Pattern) - Recommended for Verification Codes
+     */
+    public function sendByPattern(string $to, string $patternId, array $values): array
+    {
+        $username = config('auth.service.melipayamak.username', env('MELIPAYAMAK_USERNAME'));
+        $password = config('auth.service.melipayamak.password', env('MELIPAYAMAK_PASSWORD'));
+
+        $data = [
+            'username' => $username,
+            'password' => $password,
+            'text' => implode(';', $values),
+            'to' => $this->normalizePhoneNumber($to),
+            'bodyId' => $patternId,
+        ];
+
+        $post_data = http_build_query($data);
+        $handle = curl_init('https://api.payamak-panel.com/post/Send.asmx/SendByBaseNumber2');
+        curl_setopt($handle, CURLOPT_HTTPHEADER, ['content-type: application/x-www-form-urlencoded']);
+        curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($handle, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($handle, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($handle, CURLOPT_POST, true);
+        curl_setopt($handle, CURLOPT_POSTFIELDS, $post_data);
+
+        $response = curl_exec($handle);
+        $cleanResponse = trim(strip_tags((string) $response));
+        curl_close($handle);
+
+        if (is_numeric($cleanResponse) && (float)$cleanResponse > 100) {
+            return ['success' => true, 'recId' => $cleanResponse];
+        }
+
+        return [
+            'success' => false,
+            'message' => self::ERROR_MESSAGES[$cleanResponse] ?? "Error: $cleanResponse",
+            'code' => $cleanResponse
         ];
     }
 
