@@ -25,6 +25,7 @@ class VerificationController extends Controller {
           contactType: $request->contactType,
         );
 
+        $responseStatus = true;
         if ($request->contactType === ContactType::EMAIL)
         {
             // Send the code via email
@@ -45,6 +46,19 @@ class VerificationController extends Controller {
             );
         }
 
-        return response()->json(['code' => $code], 200);
+        if (is_array($responseStatus) && isset($responseStatus['success']) && !$responseStatus['success']) {
+            return response()->json([
+                'message' => $responseStatus['message'] ?? 'Failed to send verification code',
+                'details' => $responseStatus
+            ], 400);
+        }
+
+        if ($responseStatus === false) {
+             return response()->json([
+                'message' => 'Failed to send verification code'
+            ], 400);
+        }
+
+        return response()->json(['code' => $code, 'message' => 'Verification code sent successfully'], 200);
     }
 }

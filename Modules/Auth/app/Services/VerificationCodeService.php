@@ -5,7 +5,7 @@ namespace Modules\Auth\Services;
 use Modules\Auth\Enums\ContactType;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cache;
-use Modules\Auth\Mail\VerificationCodeMail;
+// use Modules\Auth\Mail\VerificationCodeMail;
 use Modules\Auth\Services\MelipayamakService;
 use Modules\Auth\Emails\VerificationCodeEmail;
 use Modules\Auth\Enums\VerificationActionType;

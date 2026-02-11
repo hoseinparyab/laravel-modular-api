@@ -2,6 +2,8 @@
 
 namespace Modules\Auth\Services;
 
+use Illuminate\Support\Facades\Log;
+
 class MelipayamakService
 {
     private const ERROR_MESSAGES = [
@@ -25,6 +27,7 @@ class MelipayamakService
 
     public function send(string $to, string $text, ?string $from = null, bool $isFlash = false): array
     {
+        $to = $this->normalizePhoneNumber($to);
         $username = config('auth.service.melipayamak.username', env('MELIPAYAMAK_USERNAME'));
         $password = config('auth.service.melipayamak.password', env('MELIPAYAMAK_PASSWORD'));
         $from = $from ?? config('auth.service.melipayamak.from', env('MELIPAYAMAK_FROM'));
@@ -55,6 +58,7 @@ class MelipayamakService
         curl_close($handle);
 
         if ($curlErr) {
+            Log::error("Melipayamak Curl Error: " . $curlErrMsg);
             return [
                 'success' => false,
                 'message' => 'خطای ارتباط با سامانه پیامک: ' . $curlErrMsg,
@@ -66,6 +70,7 @@ class MelipayamakService
 
         // Check for specific error codes
         if (array_key_exists($cleanResponse, self::ERROR_MESSAGES)) {
+            Log::warning("Melipayamak Error Response: " . $cleanResponse . " - " . self::ERROR_MESSAGES[$cleanResponse]);
             return [
                 'success' => false,
                 'message' => self::ERROR_MESSAGES[$cleanResponse],
@@ -82,11 +87,40 @@ class MelipayamakService
             ];
         }
 
+        Log::error("Melipayamak Unexpected Response: " . $cleanResponse);
         // Fallback for unexpected responses
         return [
             'success' => false,
             'message' => 'پاسخ نامشخص از سامانه پیامک: ' . $cleanResponse,
             'response' => $cleanResponse
         ];
+    }
+
+    /**
+     * Normalize phone number to Melipayamak expected format (09XXXXXXXXX)
+     */
+    private function normalizePhoneNumber(string $phone): string
+    {
+        // Remove any non-numeric characters except +
+        $phone = preg_replace('/[^\d+]/', '', $phone);
+
+        // Convert +98... to 0...
+        if (str_starts_with($phone, '+98')) {
+            $phone = '0' . substr($phone, 3);
+        }
+        // Convert 0098... to 0...
+        elseif (str_starts_with($phone, '0098')) {
+            $phone = '0' . substr($phone, 4);
+        }
+        // Convert 98... to 0...
+        elseif (str_starts_with($phone, '98') && strlen($phone) > 10) {
+            $phone = '0' . substr($phone, 2);
+        }
+        // If it starts with 9... and is 10 digits, add a 0
+        elseif (preg_match('/^9\d{9}$/', $phone)) {
+            $phone = '0' . $phone;
+        }
+
+        return $phone;
     }
 }
