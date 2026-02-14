@@ -2,10 +2,11 @@
 
 namespace Modules\Auth\Http\Controllers;
 
-use Modules\Auth\Http\Requests\CheckUserRequest;
 use Illuminate\Http\Request;
 use Modules\User\Models\User;
 use App\Http\Controllers\Controller;
+use Modules\Auth\Http\Requests\RegisterRequest;
+use Modules\Auth\Http\Requests\CheckUserRequest;
 
 class AuthController extends Controller
 {
@@ -24,5 +25,9 @@ class AuthController extends Controller
             'exists' => (bool) $exists,
             'message' => $exists ? __('auth::messages.user_exists') : __('auth::messages.user_not_found'),
         ], $exists ? 200 : 404);
+    }
+    public function register( RegisterRequest $request)
+    {
+        return 'register is done ...';
     }
 }

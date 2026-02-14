@@ -4,7 +4,7 @@ namespace Modules\Auth\Http\Controllers;
 
 use Illuminate\Routing\Controller;
 use Modules\Auth\Enums\ContactType;
-use Modules\Auth\Enums\VerificationActionType;
+
 use Modules\Auth\Services\VerificationCodeService;
 use Modules\Auth\Http\Requests\SendVerificationRequest;
 use Modules\Auth\Http\Requests\VerifyverificationRequest;
@@ -17,6 +17,7 @@ class VerificationController extends Controller {
     public function __construct(private VerificationCodeService $verificationCodeService) {
 
     }
+
     public function sendCode(SendVerificationRequest $request)
     {
         // Generate a random verification code
@@ -62,8 +63,15 @@ class VerificationController extends Controller {
 
         return response()->json(['code' => $code, 'message' => 'Verification code sent successfully'], 200);
     }
-    public function verifyCode(VerifyverificationRequest $request)
-    {
 
+    public function verifyCode(VerifyVerificationRequest $request)
+    {
+        // next step is to verify the code
+        $token = $this->verificationCodeService->createVerificationToken($request);
+
+        return response()->json([
+            'token' => $token,
+        ]);
     }
 }
+

@@ -15,4 +15,6 @@ Route::middleware([])->prefix('v1/auth')->group(function () {
 
     Route::post('code-verification/verify', [VerificationController::class, 'verifyCode'])
         ->name('code-verification.verify')->middleware('throttle:verification-code');
+    Route::post('register', [AuthController::class, 'register'])
+        ->name('register');
 });
