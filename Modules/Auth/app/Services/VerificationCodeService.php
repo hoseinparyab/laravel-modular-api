@@ -2,34 +2,36 @@
 
 namespace Modules\Auth\Services;
 
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
-use Modules\Auth\Enums\ContactType;
-use Illuminate\Support\Facades\Mail;
-// use Modules\Auth\Mail\VerificationCodeMail;
 use Illuminate\Support\Facades\Cache;
-use Modules\Auth\Services\MelipayamakService;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+// use Modules\Auth\Mail\VerificationCodeMail;
 use Modules\Auth\Emails\VerificationCodeEmail;
+use Modules\Auth\Enums\ContactType;
 use Modules\Auth\Enums\VerificationActionType;
 use Modules\Auth\Http\Requests\SendVerificationRequest;
+use Modules\Auth\Http\Requests\VerifyVerificationRequest;
+use Modules\Auth\Services\MelipayamakService;
 
 class VerificationCodeService
 {
-    public function createVerificationToken(string $contact, VerificationActionType $action, ContactType $contactType): string
+    public function createVerificationToken(VerifyVerificationRequest $request): string
     {
         do {
             $token = Str::random(100);
         } while (Cache::has("verification_after:token:{$token}"));
 
         Cache::put("verification_after:token:{$token}", [
-            'contact' => $contact,
-            'action' => $action->value,
-            'contact_type' => $contactType->value,
+            'contact' => $request->input('contact'),
+            'action' => $request->input('action'),
+            'contact_type' => $request->input('contact_type'),
+            'identifier' => hash('sha256', $request ->userAgent() . $request->ip()),
         ], now()->addMinutes(10));
 
         return $token;
     }
-    public function getVerificationToken(string $token, array $contactList, VerificationActionType $action): ?array
+    public function getVerificationToken(string $token, array $contactList, VerificationActionType $action ,string $identifier): ?array
     {
         $cacheKey = "verificaiton:after_verify:token:{$token}";
         $tokenData = Cache::pull($cacheKey);
@@ -43,8 +45,9 @@ class VerificationCodeService
 
         if (
             $tokenData['contact'] === $contact &&
-            $tokenData['action'] === $action
-        ) {
+            $tokenData['action'] === $action &&
+            $tokenData['identifier'] === $identifier
+            ) {
             return $tokenData;
         }
 
@@ -131,6 +134,7 @@ class VerificationCodeService
                 Mail::to($contact)->send(new VerificationCodeEmail($code));
             return true;
         } catch (\Throwable $th) {
+            Log::error("Failed to send OTP email to $contact: " . $th->getMessage());
             $this->forgetCode(
                 contact: $contact,
                 action: $request->action,
