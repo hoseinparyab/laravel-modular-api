@@ -67,7 +67,11 @@ class VerificationController extends Controller {
     public function verifyCode(VerifyVerificationRequest $request)
     {
         // next step is to verify the code
-        $token = $this->verificationCodeService->createVerificationToken($request);
+        $token = $this->verificationCodeService->createVerificationToken(
+            contact: $request->input('contact'),
+            action: $request->action,
+            contactType: $request->contactType
+        );
 
         return response()->json([
             'token' => $token,

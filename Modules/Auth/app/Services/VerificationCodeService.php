@@ -14,7 +14,6 @@ use Modules\Auth\Http\Requests\SendVerificationRequest;
 
 class VerificationCodeService
 {
-
     public function createVerificationToken(string $contact, VerificationActionType $action, ContactType $contactType): string
     {
         do {
@@ -29,7 +28,7 @@ class VerificationCodeService
 
         return $token;
     }
-    public function getVerificationToken(string $token, array $contactList, VerificationActionType $action)
+    public function getVerificationToken(string $token, array $contactList, VerificationActionType $action): ?array
     {
         $cacheKey = "verificaiton:after_verify:token:{$token}";
         $tokenData = Cache::pull($cacheKey);
@@ -38,12 +37,12 @@ class VerificationCodeService
             return null;
         }
 
-        $contact = $tokenData['contact_type'] === 'email' ? $contactList['email'] : $contactList['phone'];
+        $contact = $tokenData['contact_type'] === ContactType::EMAIL ? $contactList['email'] : $contactList['phone'];
 
 
         if (
             $tokenData['contact'] === $contact &&
-            $tokenData['action'] === $action->value
+            $tokenData['action'] === $action
         ) {
             return $tokenData;
         }
@@ -143,7 +142,7 @@ class VerificationCodeService
     {
         $cacheKey = $this->getCachekey($contact, $action, $contactType);
         $cacheValue = Cache::get($cacheKey);
-        if($cacheValue &&(string) $cacheValue['code']===$code ){
+        if($cacheValue && $cacheValue['code'] === $code ){
             $this-> forgetCode($contact, $action, $contactType);
             return true;
         }
