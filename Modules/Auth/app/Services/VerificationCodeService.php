@@ -2,6 +2,7 @@
 
 namespace Modules\Auth\Services;
 
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Modules\Auth\Enums\ContactType;
 use Illuminate\Support\Facades\Mail;
@@ -126,7 +127,7 @@ class VerificationCodeService
     public function sendCodeAsEmail(SendVerificationRequest $request, string $contact, int $code): array|bool
     {
         try {
-
+                Log::info("OTP Code for email $contact is: $code");
                 Mail::to($contact)->send(new VerificationCodeEmail($code));
             return true;
         } catch (\Throwable $th) {
