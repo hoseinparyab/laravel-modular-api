@@ -10,7 +10,7 @@ class RegisterUser
 {
     public function handle(RegisterRequest $request)
     {
-        $userData = $request->validate();
+        $userData = $request->validated();
         if ($request->contactType === ContactType::EMAIL) {
             $userData['email_verified_at'] = now();
         }else{

@@ -4,6 +4,7 @@ namespace Modules\Auth\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 use Modules\Auth\Actions\RegisterUser;
 use Modules\Auth\Http\Requests\CheckUserRequest;
 use Modules\Auth\Http\Requests\RegisterRequest;
@@ -30,9 +31,10 @@ class AuthController extends Controller
     public function register( RegisterRequest $request)
     {
           $user =(new RegisterUser())->handle($request);
-        return response()->json([
-            'message' => 'User registered successfully',
-            'data' => $user,
-        ], 201);
+          $token = $user->createToken('x-web-token',expiresAt: now()->addDays(30))->plainTextToken;
+
+          return response()->json([
+                'token' => Crypt::encryptString($token)
+          ], 201);
     }
 }

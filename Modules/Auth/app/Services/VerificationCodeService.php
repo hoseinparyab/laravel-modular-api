@@ -11,29 +11,30 @@ use Modules\Auth\Emails\VerificationCodeEmail;
 use Modules\Auth\Enums\ContactType;
 use Modules\Auth\Enums\VerificationActionType;
 use Modules\Auth\Http\Requests\SendVerificationRequest;
-use Modules\Auth\Http\Requests\VerifyVerificationRequest;
+use Modules\Auth\Http\Requests\VerifyverificationRequest;
 use Modules\Auth\Services\MelipayamakService;
 
 class VerificationCodeService
 {
-    public function createVerificationToken(VerifyVerificationRequest $request): string
+    public function createVerificationToken(string $contact, VerificationActionType $action, ContactType $contactType): string
     {
         do {
             $token = Str::random(100);
         } while (Cache::has("verification_after:token:{$token}"));
 
         Cache::put("verification_after:token:{$token}", [
-            'contact' => $request->input('contact'),
-            'action' => $request->input('action'),
-            'contact_type' => $request->input('contact_type'),
-            'identifier' => hash('sha256', $request ->userAgent() . $request->ip()),
+            'contact' => $contact,
+            'action' => $action,
+            'contact_type' => $contactType,
+            'identifier' => hash('sha256', request()->userAgent() . request()->ip()),
         ], now()->addMinutes(10));
 
         return $token;
     }
-    public function getVerificationToken(string $token, array $contactList, VerificationActionType $action ,string $identifier): ?array
+    public function getVerificationToken(string $token, array $contactList, VerificationActionType $action): ?array
     {
-        $cacheKey = "verificaiton:after_verify:token:{$token}";
+        $identifier = hash('sha256', request()->userAgent() . request()->ip());
+        $cacheKey = "verification_after:token:{$token}";
         $tokenData = Cache::pull($cacheKey);
 
         if (!$tokenData) {
@@ -42,7 +43,6 @@ class VerificationCodeService
 
         $contact = $tokenData['contact_type'] === ContactType::EMAIL ? $contactList['email'] : $contactList['phone'];
 
-
         if (
             $tokenData['contact'] === $contact &&
             $tokenData['action'] === $action &&
@@ -50,7 +50,6 @@ class VerificationCodeService
             ) {
             return $tokenData;
         }
-
 
         return null;
     }

@@ -7,15 +7,15 @@ use Modules\Auth\Http\Controllers\VerificationController;
 // api/v1/auth/check-user
 Route::middleware([])->prefix('v1/auth')->group(function () {
     Route::post('check-user', [AuthController::class, 'checkUser'])
-    ->name('check-user')->middleware('throttle:check-user');
+        ->name('check-user')->middleware('throttle:check-user');
 
 
     Route::post('code-verification/send-code', [VerificationController::class, 'sendCode'])
-    ->name('code-verification.send-code')->middleware('throttle:verification-code');
+        ->name('code-verification.send-code')->middleware('throttle:verification-code');
 
     Route::post('code-verification/verify', [VerificationController::class, 'verifyCode'])
         ->name('code-verification.verify')->middleware('throttle:verification-code');
 
     Route::post('register', [AuthController::class, 'register'])->name('register')->middleware('throttle:auth_user');
-
+    
 });

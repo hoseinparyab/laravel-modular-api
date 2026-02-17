@@ -64,7 +64,7 @@ class VerificationController extends Controller {
         return response()->json(['code' => $code, 'message' => 'Verification code sent successfully'], 200);
     }
 
-    public function verifyCode(VerifyVerificationRequest $request)
+    public function verifyCode(VerifyverificationRequest $request)
     {
         // next step is to verify the code
         $token = $this->verificationCodeService->createVerificationToken(
