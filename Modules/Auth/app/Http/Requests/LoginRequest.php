@@ -6,6 +6,9 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Validator;
 use Modules\Auth\Enums\ContactType;
+use Modules\Auth\Enums\VerificationActionType;
+use Modules\Auth\Services\VerificationCodeService;
+use Modules\User\Models\User;
 
 class LoginRequest extends FormRequest
 {
@@ -37,38 +40,60 @@ class LoginRequest extends FormRequest
                 }
                 $validatedData = $this->validated();
                 if ($this->input('login_type') === 'password') {
-                    $this->validatePasswordLogin($validator, $validatedData);
+                    $this->validatePasswordLogin($validatedData, $validator);
                 } else {
-                    $this->validateTokenLogin($validator, $validatedData);
+                    $this->validateTokenLogin($validatedData, $validator);
                 }
             },
         ];
     }
-    public function validatePasswordLogin(Validator $validator, array $validatedData)
+    public function validatePasswordLogin(array $validatedData, Validator $validator)
     {
-
         if (empty($validatedData['password'])) {
             $validator->errors()->add('password', 'The password field is required.');
             return;
         }
+
         $credentials = [
-            //email or phone
-            $this -> contactType->value => $validatedData['contact'],
+            $this->contactType->value => $validatedData['contact'],
             'password' => $validatedData['password'],
         ];
-        if (!Auth::once($credentials)){
-            $validator ->errors()->add('content', 'The password field is required.');
+
+        if (!Auth::attempt($credentials)) {
+            $validator->errors()->add('contact', 'The provided credentials are incorrect.');
         }
     }
-
-    public function validateTokenLogin(Validator $validator, array $validatedData)
+    public function validateTokenLogin(array $validatedData, Validator $validator)
     {
         if (empty($validatedData['token'])) {
             $validator->errors()->add('token', 'The token field is required.');
             return;
         }
-    }
+        $tokenData = (new VerificationCodeService())->getVerificationToken(
+            $validatedData['token'],
+            [
+                'email' => $validatedData['contact'],
+                'phone' => $validatedData['contact'],
+            ],
+            VerificationActionType::LOGIN,
+            hash('sha256',$this->userAgent().''.$this->ip())
+        );
+        if(!$tokenData){
+            $validator->errors()->add('token', 'The provided token is invalid or has expired.');
+            return;
+        }
+        $user = User::where($this->contactType->value, $validatedData['contact'])
+        ->first();
 
+        if (!$user) {
+            $validator->errors()->add('contact', 'No user found with the provided contact information.');
+            return;
+        }
+        $user ->verifiedContact($this->contactType);
+
+
+        Auth::onceUsingId($user->id);
+    }
     public function getContactValidationRules(): array
     {
 

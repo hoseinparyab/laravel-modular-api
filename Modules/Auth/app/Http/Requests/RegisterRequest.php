@@ -53,6 +53,7 @@ class RegisterRequest extends FormRequest
                 }
 
                 $validatedData = $this->validated();
+
                 $tokenData = (new VerificationCodeService())->getVerificationToken(
                     $validatedData['token'],
                     [

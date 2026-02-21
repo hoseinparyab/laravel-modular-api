@@ -11,12 +11,8 @@ class RegisterUser
     public function handle(RegisterRequest $request)
     {
         $userData = $request->validated();
-        if ($request->contactType === ContactType::EMAIL) {
-            $userData['email_verified_at'] = now();
-        }else{
-            $userData['phone_verified_at'] = now();
-        }
         $user = User::create($userData);
+         $user->verifiedContact($request->contactType);
         //most create token for user after register and return it in response for auto login
         return $user;
     }
