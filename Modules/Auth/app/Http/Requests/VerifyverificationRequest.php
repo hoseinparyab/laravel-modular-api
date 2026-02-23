@@ -2,24 +2,23 @@
 
 namespace Modules\Auth\Http\Requests;
 
-use Illuminate\Validation\Rule;
-use Modules\Auth\Enums\ContactType;
-use Illuminate\Validation\Validator;
-use Illuminate\Validation\Rules\Enum;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Enum;
+use Illuminate\Validation\Validator;
+use Modules\Auth\base\BaseAuthRequest;
+use Modules\Auth\Enums\ContactType;
 use Modules\Auth\Enums\VerificationActionType;
 use Modules\Auth\Services\VerificationCodeService;
 
-class VerifyverificationRequest extends FormRequest
+class VerifyverificationRequest extends BaseAuthRequest
 {
 
-    public ContactType $contactType;
-    public VerificationActionType $action;
 
     public function prepareForValidation(): void
     {
-        $this->contactType = ContactType::detectContactTypes($this->input('contact') ?? '');
-        $this->action = VerificationActionType::tryFrom($this->input('action') ?? '');
+        $this->prepareContactType();
+        $this->PrepareAction();
     }
     /**
      * Get the validation rules that apply to the request.
@@ -67,41 +66,10 @@ class VerifyverificationRequest extends FormRequest
         ];
     }
 
-    private function getContactValidationRule(): array
-    {
-        $verificationAction = $this->action;
-        $contact = $this->input('contact');
-        $action = $this->input('action');
 
-        if (empty($contact) || empty($action)) {
-            return [];
-        }
-
-        $contactType = ContactType::detectContactTypes($this->input('contact', ''));
-        $verificationAction = VerificationActionType::tryFrom($this->input('action'));
-
-        if (!$verificationAction) {
-            return [];
-        }
-
-        if ($this->contactType === ContactType::EMAIL) {
-            return [
-                'email:rfc,dns',
-                Rule::when($verificationAction->isContactNeedToBeUnique(), 'unique:users,email'),
-            ];
-        }
-
-        return [
-            'phone:mobile',
-            Rule::when($verificationAction->isContactNeedToBeUnique(), 'unique:users,phone_number'),
-        ];
-    }
 
     /**
      * Determine if the user is authorized to make this request.
      */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 }
