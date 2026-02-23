@@ -5,9 +5,12 @@ namespace Modules\Auth\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Hash;
 use Modules\Auth\Actions\CreateUserToken;
+use Modules\Auth\Actions\ForgotPassword;
 use Modules\Auth\Actions\RegisterUser;
 use Modules\Auth\Http\Requests\CheckUserRequest;
+use Modules\Auth\Http\Requests\ForgotPasswordRequest;
 use Modules\Auth\Http\Requests\LoginRequest;
 use Modules\Auth\Http\Requests\RegisterRequest;
 use Modules\User\Models\User;
@@ -82,5 +85,29 @@ class AuthController extends Controller
                     )
                ]
           );
+    }
+    public function forgotPassword(ForgotPasswordRequest $request)
+    {
+        try {
+            $user = (new ForgotPassword())->handle($request);
+            $token = (new CreateUserToken)->handle($user, isEncrypted: true);
+
+            return $this->successResponse(
+                __('auth::messages.password_reset_success'),
+                data: [
+                    'token' => $token,
+                    'user' => [
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'phone_number' => $user->phone_number,
+                    ]
+                ]
+            );
+        } catch (\Throwable $th) {
+            return $this->errorResponse(
+                $th->getMessage(),
+                code: 422
+            );
+        }
     }
 }

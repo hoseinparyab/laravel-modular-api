@@ -6,14 +6,15 @@ enum VerificationActionType: string
 {
     case REGISTER = 'register';
     case LOGIN = 'login';
+    case FORGOT_PASSWORD = 'forgot_password';
 
     public function isContactNeedToBeUnique(): bool
     {
-        return $this === self::REGISTER;
+        return in_array($this, [self::REGISTER]);
     }
 
     public function isContactNeedToExist(): bool
     {
-        return $this === self::LOGIN;
+        return in_array($this, [self::LOGIN, self::FORGOT_PASSWORD]);
     }
 }
