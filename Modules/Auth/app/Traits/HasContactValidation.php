@@ -14,42 +14,37 @@ trait HasContactValidation
         if ($this->contactType === ContactType::PHONE) {
             return $this->getPhoneValidationRules();
         }
+
         return [];
     }
 
     public function getEmailValidationRules(): array
     {
-        $rules = ['email' => ['email::rfc', 'dns']];
-        if ($this->action->isContactNeededToBeUnique()) {
-            $rules[] = [
-                'email',
-                'unique:users,email',
-            ];
+        $rules = ['email:rfc,dns'];
+
+        if ($this->action?->isContactNeedToBeUnique()) {
+            $rules[] = 'unique:users,email';
         }
-        if ($this->action->isContactNeededToExist()) {
-            $rules[] = [
-                'email',
-                'exists:users,email',
-            ];
+
+        if ($this->action?->isContactNeedToExist()) {
+            $rules[] = 'exists:users,email';
         }
+
         return $rules;
     }
 
     public function getPhoneValidationRules(): array
     {
         $rules = ['phone:mobile'];
-        if ($this->action->isContactNeededToBeUnique()) {
-            $rules[] = [
-                'phone',
-                'unique:users,phone',
-            ];
+
+        if ($this->action?->isContactNeedToBeUnique()) {
+            $rules[] = 'unique:users,phone';
         }
-        if ($this->action->isContactNeededToExist()) {
-            $rules[] = [
-                'phone',
-                'exists:users,phone',
-            ];
+
+        if ($this->action?->isContactNeedToExist()) {
+            $rules[] = 'exists:users,phone';
         }
+
         return $rules;
     }
 }

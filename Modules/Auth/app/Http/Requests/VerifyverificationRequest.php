@@ -36,7 +36,7 @@ class VerifyverificationRequest extends BaseAuthRequest
                 'bail',
                 'required',
                 'string',
-                ...$this->getContactValidationRule(),
+                ...$this->getContactValidationRules(),
             ],
             'code' => [
                 'bail',

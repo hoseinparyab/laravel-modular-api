@@ -36,7 +36,7 @@ class SendVerificationRequest extends BaseAuthRequest
                 'bail',
                 'required',
                 'string',
-                ...$this->getContactValidationRule(),
+                ...$this->getContactValidationRules(),
             ],
         ];
     }
