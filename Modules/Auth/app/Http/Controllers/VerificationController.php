@@ -3,6 +3,7 @@
 namespace Modules\Auth\Http\Controllers;
 
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Log;
 use Modules\Auth\Enums\ContactType;
 
 use Modules\Auth\Services\VerificationCodeService;
@@ -61,7 +62,16 @@ class VerificationController extends Controller {
             ], 400);
         }
 
-        return response()->json(['code' => $code, 'message' => 'Verification code sent successfully'], 200);
+        Log::info('Verification OTP code', [
+            'contact' => $request->input('contact'),
+            'action' => $request->action?->value,
+            'contact_type' => $request->contactType->value,
+            'code' => $code,
+        ]);
+
+        return response()->json([
+            'message' => 'Verification code sent successfully',
+        ], 200);
     }
 
     public function verifyCode(VerifyverificationRequest $request)
