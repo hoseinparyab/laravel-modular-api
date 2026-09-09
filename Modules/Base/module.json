@@ -1,0 +1,11 @@
+{
+    "name": "Base",
+    "alias": "base",
+    "description": "Shared base classes and utilities for other modules",
+    "keywords": ["base", "shared"],
+    "priority": -1,
+    "providers": [
+        "Modules\\Base\\Providers\\BaseServiceProvider"
+    ],
+    "files": []
+}
