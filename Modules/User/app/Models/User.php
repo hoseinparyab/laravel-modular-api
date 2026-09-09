@@ -21,7 +21,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
-        'phone_number',
+        'phone',
         'password',
     ];
 
@@ -47,19 +47,6 @@ class User extends Authenticatable
             'phone_verified_at' => 'datetime',
             'password'          => 'hashed',
         ];
-    }
-
-    /**
-     * Allow accessing `phone` attribute mapped to `phone_number` column.
-     */
-    public function getPhoneAttribute(): ?string
-    {
-        return $this->attributes['phone_number'] ?? null;
-    }
-
-    public function setPhoneAttribute($value): void
-    {
-        $this->attributes['phone_number'] = $value;
     }
 
     public function verifiedContact(ContactType $contactType): void

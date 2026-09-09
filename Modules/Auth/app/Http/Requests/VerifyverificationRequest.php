@@ -6,7 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\Validator;
-use Modules\Auth\base\BaseAuthRequest;
+use Modules\Auth\Http\Requests\BaseAuthRequest;
 use Modules\Auth\Enums\ContactType;
 use Modules\Auth\Enums\VerificationActionType;
 use Modules\Auth\Services\VerificationCodeService;

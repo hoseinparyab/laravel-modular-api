@@ -5,7 +5,7 @@ namespace Modules\Auth\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Validator;
-use Modules\Auth\base\BaseAuthRequest;
+use Modules\Auth\Http\Requests\BaseAuthRequest;
 use Modules\Auth\Enums\ContactType;
 use Modules\Auth\Enums\VerificationActionType;
 use Modules\Auth\Services\VerificationCodeService;

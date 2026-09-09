@@ -3,7 +3,7 @@
 namespace Modules\Auth\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Modules\Auth\base\BaseAuthRequest;
+use Modules\Auth\Http\Requests\BaseAuthRequest;
 
 class CheckUserRequest extends BaseAuthRequest
 {

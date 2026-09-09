@@ -1,4 +1,4 @@
-<?
+<?php
 
 namespace Modules\Auth\Traits;
 
@@ -16,36 +16,38 @@ trait HasContactValidation
         }
         return [];
     }
+
     public function getEmailValidationRules(): array
     {
-     $rules = [ 'email' => ['email::rfc','dns'],];
+        $rules = ['email' => ['email::rfc', 'dns']];
         if ($this->action->isContactNeededToBeUnique()) {
-            $rules[]= [
+            $rules[] = [
                 'email',
                 'unique:users,email',
             ];
         }
         if ($this->action->isContactNeededToExist()) {
-            $rules[]= [
+            $rules[] = [
                 'email',
                 'exists:users,email',
             ];
         }
         return $rules;
     }
+
     public function getPhoneValidationRules(): array
     {
         $rules = ['phone:mobile'];
         if ($this->action->isContactNeededToBeUnique()) {
-            $rules[]= [
+            $rules[] = [
                 'phone',
-                'unique:users,phone_number',
+                'unique:users,phone',
             ];
         }
         if ($this->action->isContactNeededToExist()) {
-            $rules[]= [
+            $rules[] = [
                 'phone',
-                'exists:users,phone_number',
+                'exists:users,phone',
             ];
         }
         return $rules;

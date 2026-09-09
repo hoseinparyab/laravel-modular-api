@@ -25,7 +25,7 @@ class AuthController extends Controller
         $contact = $request->validated()['contact'];
 
         $exists = User::where('email', $contact)
-            ->orWhere('phone_number', $contact)
+            ->orWhere('phone', $contact)
             ->exists();
 
         return response()->json([
@@ -46,7 +46,7 @@ class AuthController extends Controller
                 'user' => [
                     'name' => $user->name,
                     'email' => $user->email,
-                    'phone_number' => $user->phone_number,
+                    'phone' => $user->phone,
                 ]
             ],
             cookies: [
@@ -99,7 +99,7 @@ class AuthController extends Controller
                     'user' => [
                         'name' => $user->name,
                         'email' => $user->email,
-                        'phone_number' => $user->phone_number,
+                        'phone' => $user->phone,
                     ]
                 ]
             );

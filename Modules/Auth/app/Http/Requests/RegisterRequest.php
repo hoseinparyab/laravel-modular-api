@@ -1,13 +1,10 @@
 <?php
-
 namespace Modules\Auth\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
-use Modules\Auth\base\BaseAuthRequest;
 use Modules\Auth\Enums\ContactType;
 use Modules\Auth\Enums\VerificationActionType;
-use Modules\Auth\Services\VerificationCodeService;
+use Modules\Auth\Http\Requests\BaseAuthRequest;
 
 class RegisterRequest extends BaseAuthRequest
 {
@@ -24,18 +21,18 @@ class RegisterRequest extends BaseAuthRequest
     public function rules(): array
     {
         return [
-            'name' => [
+            'name'     => [
                 'required',
                 'string',
                 'min:3',
                 'max:255',
             ],
-            'email' => [
+            'email'    => [
                 'required',
                 'email:rfc,dns',
                 'unique:users,email',
             ],
-            'phone' => [
+            'phone'    => [
                 'required',
                 'string',
                 'phone:mobile',
@@ -47,10 +44,10 @@ class RegisterRequest extends BaseAuthRequest
                 'min:8',
                 'confirmed',
             ],
-            'token' => [
+            'token'    => [
                 'required',
                 'string',
-            ]
+            ],
         ];
     }
 
@@ -70,17 +67,17 @@ class RegisterRequest extends BaseAuthRequest
                     $this->action,
                     [
                         'email' => $validatedData['email'],
-                        'phone' => $validatedData['phone']
+                        'phone' => $validatedData['phone'],
                     ]
                 );
 
-                if (!$tokenData) {
+                if (! $tokenData) {
                     return;
                 }
 
                 $this->contactType = $tokenData['contact_type'];
-                $this->contact = $tokenData['contact'];
-            }
+                $this->contact     = $tokenData['contact'];
+            },
         ];
     }
 }

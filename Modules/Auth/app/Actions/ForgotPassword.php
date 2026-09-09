@@ -14,7 +14,7 @@ class ForgotPassword
         $contact = $validated['contact'];
 
         $user = User::where('email', $contact)
-            ->orWhere('phone_number', $contact)
+            ->orWhere('phone', $contact)
             ->first();
 
         if (!$user) {
