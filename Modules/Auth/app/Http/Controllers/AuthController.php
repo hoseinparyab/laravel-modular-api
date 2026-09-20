@@ -1,11 +1,7 @@
 <?php
-
 namespace Modules\Auth\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Facades\Hash;
 use Modules\Auth\Actions\CreateUserToken;
 use Modules\Auth\Actions\ForgotPassword;
 use Modules\Auth\Actions\RegisterUser;
@@ -13,9 +9,10 @@ use Modules\Auth\Http\Requests\CheckUserRequest;
 use Modules\Auth\Http\Requests\ForgotPasswordRequest;
 use Modules\Auth\Http\Requests\LoginRequest;
 use Modules\Auth\Http\Requests\RegisterRequest;
+use Modules\Base\Http\Controllers\ApiController;
 use Modules\User\Models\User;
 
-class AuthController extends Controller
+class AuthController extends ApiController
 {
     /**
      * Display a listing of the resource.
@@ -28,26 +25,27 @@ class AuthController extends Controller
             ->orWhere('phone', $contact)
             ->exists();
 
-        return response()->json([
-            'exists' => (bool) $exists,
-            'message' => $exists ? __('auth::messages.user_exists') : __('auth::messages.user_not_found'),
-        ], $exists ? 200 : 404);
+        if ($exists) {
+            return $this->successResponse(
+                message: __('auth::messages.user_exists'),
+            );
+        }
+        return $this->errorResponse(
+            message: __('auth::messages.user_not_found'),
+            code: 404,
+        );
     }
     public function login(LoginRequest $request)
     {
         /** @var User */
-        $user = Auth::user();
+        $user  = Auth::user();
         $token = (new CreateUserToken)->handle($user, isEncrypted: true);
 
         return $this->successResponse(
-            __('auth::auth.login_success'),
+            message: __('auth::auth.login_success'),
             data: [
                 'token' => $token,
-                'user' => [
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'phone' => $user->phone,
-                ]
+
             ],
             cookies: [
                 cookie(
@@ -58,56 +56,46 @@ class AuthController extends Controller
                     config('session.domain'),
                     true,
                     true,
-                )
+                ),
+            ]
+        );
+    }
+    public function register(RegisterRequest $request)
+    {
+        $user  = (new RegisterUser)->handle($request);
+        $token = (new CreateUserToken)->handle($user, isEncrypted: true);
+
+        return $this->successResponse(
+            message: __('auth::auth.registration_success'),
+            data: [
+                'token' => $token,
+            ],
+            cookies: [
+                cookie(
+                    'x_web_token',
+                    $token,
+                    60 * 24 * 30, // 30 days
+                    '/',
+                    config('session.domain'),
+                    true,
+                    true,
+                ),
             ]
         );
     }
 
-    public function register( RegisterRequest $request)
-    {
-          $user = (new RegisterUser())->handle($request);
-          $token = (new CreateUserToken)->handle($user, isEncrypted: true);
-
-          return $this->successResponse(
-               __('auth::auth.registration_success'), // Assuming this translation exists
-               data: [
-                    'token' => $token,
-               ],
-               cookies: [
-                    cookie(
-                        'x-web_token',
-                        $token,
-                        60 * 24 * 30, // 30 days
-                        '/',
-                        config('session.domain'),
-                        config('session.secure', true),
-                        true,
-                    )
-               ]
-          );
-    }
     public function forgotPassword(ForgotPasswordRequest $request)
     {
         try {
-            $user = (new ForgotPassword())->handle($request);
-            $token = (new CreateUserToken)->handle($user, isEncrypted: true);
-
-            return $this->successResponse(
-                __('auth::messages.password_reset_success'),
-                data: [
-                    'token' => $token,
-                    'user' => [
-                        'name' => $user->name,
-                        'email' => $user->email,
-                        'phone' => $user->phone,
-                    ]
-                ]
-            );
+            (new ForgotPassword)->handle($request);
         } catch (\Throwable $th) {
             return $this->errorResponse(
-                $th->getMessage(),
-                code: 422
+                message: __('auth::messages.password_reset_failed'),
+                code: 503,
             );
         }
+        return $this->successResponse(
+            message: __('auth::messages.password_reset_success'),
+        );
     }
 }

@@ -11,4 +11,6 @@ return [
     'password_required' => 'لطفاً رمز عبور جدید را وارد کنید.',
     'password_min_8' => 'رمز عبور باید حداقل ۸ کاراکتر باشد.',
     'password_reset_success' => 'رمز عبور شما با موفقیت تغییر یافت.',
+    'verification_code_sent_successfully' => 'کد تایید با موفقیت ارسال شد.',
+    'user_exists' => 'کاربر از قبل وجود دارد.',
 ];

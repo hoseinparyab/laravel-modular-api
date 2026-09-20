@@ -11,4 +11,6 @@ return [
     'password_required' => 'Please enter a new password.',
     'password_min_8' => 'The password must be at least 8 characters.',
     'password_reset_success' => 'Your password has been reset successfully.',
+    'verification_code_sent_successfully' => 'Verification code sent successfully.',
+    'user_exists' => 'User already exists.',
 ];
